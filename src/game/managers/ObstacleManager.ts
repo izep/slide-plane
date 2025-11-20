@@ -1,0 +1,123 @@
+import Phaser from 'phaser';
+import { Obstacle } from '../entities/Obstacle';
+import { ObstacleType } from '../../types/GameTypes';
+import {
+    OBSTACLE_START_SPEED,
+    OBSTACLE_SPAWN_INTERVAL,
+    OBSTACLE_MIN_SPAWN_INTERVAL,
+    OBSTACLE_SPAWN_DECREASE,
+    OBSTACLE_SPEED_INCREASE,
+    OBSTACLE_MIN_SIZE,
+    OBSTACLE_MAX_SIZE,
+    DIFFICULTY_INCREASE_INTERVAL,
+    MAX_DIFFICULTY_LEVEL
+} from '../config/Constants';
+
+export class ObstacleManager {
+    private scene: Phaser.Scene;
+    private obstacles: Obstacle[] = [];
+    private spawnTimer: number = 0;
+    private currentSpawnInterval: number = OBSTACLE_SPAWN_INTERVAL;
+    private currentSpeed: number = OBSTACLE_START_SPEED;
+    private difficultyLevel: number = 0;
+    private difficultyTimer: number = 0;
+    private markedObstacles: Set<Obstacle> = new Set();
+
+    constructor(scene: Phaser.Scene) {
+        this.scene = scene;
+    }
+
+    update(delta: number): void {
+        // Update spawn timer
+        this.spawnTimer += delta;
+        if (this.spawnTimer >= this.currentSpawnInterval) {
+            this.spawnObstacle();
+            this.spawnTimer = 0;
+        }
+
+        // Update difficulty
+        this.difficultyTimer += delta;
+        if (this.difficultyTimer >= DIFFICULTY_INCREASE_INTERVAL && this.difficultyLevel < MAX_DIFFICULTY_LEVEL) {
+            this.increaseDifficulty();
+            this.difficultyTimer = 0;
+        }
+
+        // Update all obstacles
+        this.obstacles.forEach(obstacle => {
+            obstacle.update(delta);
+        });
+
+        // Remove off-screen or dead obstacles
+        this.obstacles = this.obstacles.filter(obstacle => !obstacle.isDead);
+    }
+
+    private spawnObstacle(): void {
+        const x = this.scene.scale.width + 50;
+        const size = Phaser.Math.Between(OBSTACLE_MIN_SIZE, OBSTACLE_MAX_SIZE);
+        const y = Phaser.Math.Between(size, this.scene.scale.height - size);
+
+        // Determine obstacle type based on difficulty
+        let type = ObstacleType.STATIC;
+        if (this.difficultyLevel >= 3) {
+            const rand = Math.random();
+            if (rand < 0.3) {
+                type = ObstacleType.MOVING_VERTICAL;
+            }
+        }
+
+        const obstacle = new Obstacle(this.scene, x, y, type, this.currentSpeed, size);
+        this.obstacles.push(obstacle);
+    }
+
+    private increaseDifficulty(): void {
+        this.difficultyLevel++;
+        
+        // Decrease spawn interval (spawn faster)
+        this.currentSpawnInterval = Math.max(
+            OBSTACLE_MIN_SPAWN_INTERVAL,
+            this.currentSpawnInterval - OBSTACLE_SPAWN_DECREASE
+        );
+
+        // Increase obstacle speed
+        this.currentSpeed += OBSTACLE_SPEED_INCREASE;
+    }
+
+    getObstacles(): Obstacle[] {
+        return this.obstacles;
+    }
+
+    removeObstacle(obstacle: Obstacle): void {
+        const index = this.obstacles.indexOf(obstacle);
+        if (index !== -1) {
+            this.obstacles.splice(index, 1);
+        }
+    }
+
+    checkPassedObstacles(airplaneX: number): Obstacle[] {
+        const passed: Obstacle[] = [];
+        
+        this.obstacles.forEach(obstacle => {
+            if (!this.markedObstacles.has(obstacle) && obstacle.hasPassed(airplaneX)) {
+                this.markedObstacles.add(obstacle);
+                passed.push(obstacle);
+            }
+        });
+
+        return passed;
+    }
+
+    reset(): void {
+        this.obstacles.forEach(obstacle => obstacle.destroy());
+        this.obstacles = [];
+        this.spawnTimer = 0;
+        this.currentSpawnInterval = OBSTACLE_SPAWN_INTERVAL;
+        this.currentSpeed = OBSTACLE_START_SPEED;
+        this.difficultyLevel = 0;
+        this.difficultyTimer = 0;
+        this.markedObstacles.clear();
+    }
+
+    getDifficultyLevel(): number {
+        return this.difficultyLevel;
+    }
+}
