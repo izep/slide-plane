@@ -54,13 +54,21 @@ export class ObstacleManager {
     private spawnObstacle(): void {
         const x = this.scene.scale.width + 50;
         const size = Phaser.Math.Between(OBSTACLE_MIN_SIZE, OBSTACLE_MAX_SIZE);
-        const y = Phaser.Math.Between(size, this.scene.scale.height - size);
+        
+        // 30% chance to spawn directly in player's path (harder!)
+        let y: number;
+        if (Math.random() < 0.3) {
+            // Spawn near center where player often is
+            y = Phaser.Math.Between(this.scene.scale.height * 0.3, this.scene.scale.height * 0.7);
+        } else {
+            y = Phaser.Math.Between(size, this.scene.scale.height - size);
+        }
 
         // Determine obstacle type based on difficulty
         let type = ObstacleType.STATIC;
-        if (this.difficultyLevel >= 3) {
+        if (this.difficultyLevel >= 2) {
             const rand = Math.random();
-            if (rand < 0.3) {
+            if (rand < 0.4) { // increased chance of moving obstacles
                 type = ObstacleType.MOVING_VERTICAL;
             }
         }

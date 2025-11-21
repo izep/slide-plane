@@ -113,6 +113,10 @@ export class PowerUpManager {
         return this.powerUpTimeRemaining;
     }
 
+    getTimeUntilNextPowerUp(): number {
+        return Math.max(0, POWERUP_SPAWN_INTERVAL - this.spawnTimer);
+    }
+
     removeProjectile(projectile: Projectile): void {
         const index = this.projectiles.indexOf(projectile);
         if (index !== -1) {

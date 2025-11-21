@@ -4,9 +4,11 @@ import { PowerUpType } from '../types/GameTypes';
 
 interface GameUIProps {
     isPlaying: boolean;
+    distance?: number;
+    timeUntilPowerUp?: number;
 }
 
-export const GameUI: React.FC<GameUIProps> = ({ isPlaying }) => {
+export const GameUI: React.FC<GameUIProps> = ({ isPlaying, distance = 0, timeUntilPowerUp = 0 }) => {
     const [score, setScore] = useState(0);
     const [lives, setLives] = useState(3);
     const [currentPowerUp, setCurrentPowerUp] = useState<PowerUpType | null>(null);
@@ -68,8 +70,19 @@ export const GameUI: React.FC<GameUIProps> = ({ isPlaying }) => {
                     <span className="hud-value">{score}</span>
                 </div>
                 <div className="hud-item">
+                    <span className="hud-label">Distance:</span>
+                    <span className="hud-value">{Math.floor(distance)}m</span>
+                </div>
+                <div className="hud-item">
                     <span className="hud-label">Lives:</span>
                     <span className="hud-value">{'❤️'.repeat(lives)}</span>
+                </div>
+            </div>
+            
+            <div className="hud-bottom">
+                <div className="hud-item-small">
+                    <span className="hud-label-small">Next Power-up:</span>
+                    <span className="hud-value-small">{Math.ceil(timeUntilPowerUp / 1000)}s</span>
                 </div>
             </div>
             

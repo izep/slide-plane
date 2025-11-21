@@ -4,7 +4,7 @@ import { COLOR_OBSTACLE, COLOR_EXPLOSION } from '../config/Constants';
 
 export class Obstacle {
     private scene: Phaser.Scene;
-    private sprite: Phaser.GameObjects.Rectangle;
+    private sprite: Phaser.GameObjects.Graphics;
     private type: ObstacleType;
     private speed: number;
     private size: number;
@@ -19,31 +19,70 @@ export class Obstacle {
         this.speed = speed;
         this.size = size;
 
-        // Create obstacle sprite
-        this.sprite = scene.add.rectangle(x, y, size, size, COLOR_OBSTACLE);
+        // Create crate-style obstacle
+        this.sprite = this.createCrate(scene, x, y, size);
         scene.physics.add.existing(this.sprite);
         
         const body = this.sprite.body as Phaser.Physics.Arcade.Body;
         body.setVelocityX(-speed);
 
         // Setup movement bounds for vertical movement
-        this.minY = size;
-        this.maxY = scene.scale.height - size;
+        this.minY = size / 2;
+        this.maxY = scene.scale.height - size / 2;
+        
+        // For diagonal movement, set initial Y velocity
+        if (type === ObstacleType.MOVING_VERTICAL) {
+            body.setVelocityY(speed * this.moveDirection);
+        }
+    }
+
+    private createCrate(scene: Phaser.Scene, x: number, y: number, size: number): Phaser.GameObjects.Graphics {
+        const graphics = scene.add.graphics({ x, y });
+        const half = size / 2;
+        
+        // Brown crate
+        graphics.fillStyle(COLOR_OBSTACLE, 1);
+        graphics.fillRect(-half, -half, size, size);
+        
+        // Wood grain lines (darker brown)
+        graphics.lineStyle(2, 0x654321, 1);
+        graphics.lineBetween(-half, -half + size * 0.3, half, -half + size * 0.3);
+        graphics.lineBetween(-half, half - size * 0.3, half, half - size * 0.3);
+        graphics.lineBetween(-half + size * 0.3, -half, -half + size * 0.3, half);
+        graphics.lineBetween(half - size * 0.3, -half, half - size * 0.3, half);
+        
+        // Corner brackets (metal)
+        graphics.fillStyle(0x444444, 1);
+        const bracketSize = size * 0.15;
+        // Top-left
+        graphics.fillRect(-half, -half, bracketSize, bracketSize * 2);
+        graphics.fillRect(-half, -half, bracketSize * 2, bracketSize);
+        // Top-right
+        graphics.fillRect(half - bracketSize, -half, bracketSize, bracketSize * 2);
+        graphics.fillRect(half - bracketSize * 2, -half, bracketSize * 2, bracketSize);
+        // Bottom-left
+        graphics.fillRect(-half, half - bracketSize * 2, bracketSize, bracketSize * 2);
+        graphics.fillRect(-half, half - bracketSize, bracketSize * 2, bracketSize);
+        // Bottom-right
+        graphics.fillRect(half - bracketSize, half - bracketSize * 2, bracketSize, bracketSize * 2);
+        graphics.fillRect(half - bracketSize * 2, half - bracketSize, bracketSize * 2, bracketSize);
+        
+        return graphics;
     }
 
     update(delta: number): void {
         if (this.isDead) return;
 
-        // Handle different obstacle types
+        // Handle diagonal bouncing for moving obstacles
         if (this.type === ObstacleType.MOVING_VERTICAL) {
             const body = this.sprite.body as Phaser.Physics.Arcade.Body;
             
-            // Change direction at bounds
-            if (this.sprite.y <= this.minY || this.sprite.y >= this.maxY) {
-                this.moveDirection *= -1;
+            // Bounce off top or bottom edges
+            if (this.sprite.y <= this.minY && body.velocity.y < 0) {
+                body.setVelocityY(Math.abs(body.velocity.y));
+            } else if (this.sprite.y >= this.maxY && body.velocity.y > 0) {
+                body.setVelocityY(-Math.abs(body.velocity.y));
             }
-            
-            body.setVelocityY(this.speed * this.moveDirection);
         }
 
         // Check if off screen (left side)
@@ -56,7 +95,7 @@ export class Obstacle {
         return this.sprite.x < -this.size;
     }
 
-    getSprite(): Phaser.GameObjects.Rectangle {
+    getSprite(): Phaser.GameObjects.Graphics {
         return this.sprite;
     }
 
