@@ -1,9 +1,6 @@
 import Phaser from 'phaser';
 import { PowerUpType } from '../../types/GameTypes';
 import { 
-    COLOR_POWERUP_BULLET, 
-    COLOR_POWERUP_ROCKET, 
-    COLOR_POWERUP_LASER, 
     COLOR_PROJECTILE,
     PROJECTILE_SPEED,
     LASER_LENGTH
@@ -11,7 +8,7 @@ import {
 
 export class PowerUp {
     private scene: Phaser.Scene;
-    private sprite: Phaser.GameObjects.Rectangle;
+    private sprite: Phaser.GameObjects.Container;
     private type: PowerUpType;
     public isCollected: boolean = false;
 
@@ -19,8 +16,7 @@ export class PowerUp {
         this.scene = scene;
         this.type = type;
 
-        const color = this.getColorForType(type);
-        this.sprite = scene.add.rectangle(x, y, 30, 30, color);
+        this.sprite = this.createPowerUpSprite(scene, x, y, type);
         scene.physics.add.existing(this.sprite);
         
         const body = this.sprite.body as Phaser.Physics.Arcade.Body;
@@ -37,12 +33,10 @@ export class PowerUp {
         });
     }
 
-    private getColorForType(type: PowerUpType): number {
-        switch (type) {
-            case PowerUpType.BULLET: return COLOR_POWERUP_BULLET;
-            case PowerUpType.ROCKET: return COLOR_POWERUP_ROCKET;
-            case PowerUpType.LASER: return COLOR_POWERUP_LASER;
-        }
+    private createPowerUpSprite(scene: Phaser.Scene, x: number, y: number, type: PowerUpType): Phaser.GameObjects.Container {
+        const textureName = `powerup-${type}`;
+        const sprite = scene.add.sprite(0, 0, textureName);
+        return scene.add.container(x, y, [sprite]);
     }
 
     update(): void {
@@ -51,7 +45,7 @@ export class PowerUp {
         }
     }
 
-    getSprite(): Phaser.GameObjects.Rectangle {
+    getSprite(): Phaser.GameObjects.Container {
         return this.sprite;
     }
 
