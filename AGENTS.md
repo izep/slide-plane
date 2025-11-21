@@ -49,26 +49,34 @@ const bounds = new Phaser.Geom.Rectangle(
 src/
 ├── game/
 │   ├── config/
-│   │   └── Constants.ts          # All game constants
+│   │   └── Constants.ts              # All game constants
 │   ├── entities/
-│   │   ├── Airplane.ts           # Player (returns Container)
-│   │   ├── Obstacle.ts           # Crates (returns Graphics)
-│   │   ├── EnemyPlane.ts         # Cats (returns Graphics)
-│   │   ├── PowerUp.ts            # Power-ups (returns Rectangle)
+│   │   ├── Airplane.ts               # Player (Container)
+│   │   ├── Obstacle.ts               # Crates (Graphics)
+│   │   ├── EnemyPlane.ts             # Cats (Graphics)
+│   │   ├── PowerUp.ts                # Power-ups (Rectangle / projectiles)
 │   │   └── ...
 │   ├── managers/
-│   │   ├── ObstacleManager.ts    # Spawns/manages obstacles
-│   │   ├── PowerUpManager.ts     # Spawns/manages power-ups
-│   │   ├── EnemyPlaneManager.ts  # Spawns/manages enemies
-│   │   └── ScoreManager.ts       # Score/lives/time tracking
-│   └── scenes/
-│       └── GameScene.ts          # Main game scene
+│   │   ├── ObstacleManager.ts        # Spawns/manages obstacles
+│   │   ├── PowerUpManager.ts         # Spawns/manages power-ups & projectiles
+│   │   ├── PowerUpFireController.ts  # Pure timing & fire-rate logic (unit tested)
+│   │   ├── EnemyPlaneManager.ts      # Spawns/manages enemies
+│   │   └── ScoreManager.ts           # Score/lives/time tracking
+│   ├── scenes/
+│   │   └── GameScene.ts              # Main game scene
 ├── components/
-│   ├── GameHUD.tsx               # Score/distance/lives display
-│   └── GameOver.tsx              # Game over screen
+│   ├── MainMenu.tsx                  # Start screen
+│   ├── GameUI.tsx                    # HUD (distance & power-up timer)
+│   └── GameOver.tsx                  # Game over screen
+├── utils/
+│   ├── EventBus.ts                   # Phaser ↔ React events
+│   └── collision.ts                  # Pure collision helpers
 └── tests/
-    ├── collision.test.ts         # Collision logic tests
-    └── entities.test.ts          # Type safety tests
+    ├── collision.test.ts             # Collision logic tests
+    ├── entities.test.ts              # Type safety tests
+    ├── eventBus.test.ts              # EventBus behavior
+    ├── scoreManager.test.ts          # Scoring & lives
+    └── powerUpManager.logic.test.ts  # Fire rate & expiry logic
 ```
 
 ## Important Constants
@@ -216,6 +224,28 @@ const sprite = scene.add.sprite(x, y, 'textureName');
 ```
 
 ## Testing
+
+### Runtime Scene Events (React Subscriptions)
+| Event | Payload | Purpose |
+|-------|---------|---------|
+| DISTANCE_UPDATE | { distance:number } | Update HUD distance without polling |
+| POWERUP_TIMER_UPDATE | { timeUntil:number } | Show seconds until next spawn chance |
+| SCORE_UPDATE | { score } | HUD score live update |
+| LIVES_UPDATE | { lives } | HUD lives update |
+| POWERUP_COLLECTED | { type } | Display active power-up indicator |
+| POWERUP_EXPIRED | {} | Clear power-up indicator |
+
+### Coverage Targets
+- Managers & controllers (ObstacleManager, PowerUpManager, PowerUpFireController, ScoreManager) ≥80% statements & branches.
+- EventBus: on/off/emit/removeAll paths.
+- Difficulty progression: spawn interval & speed scaling (mock time & Math.random).
+- Power-up lifecycle: activation, canFire gating, expiry.
+- Collision helpers: body bounds & intersection true/false cases.
+
+### Determinism Tips
+- Mock Math.random for spawn distribution tests.
+- Use fixed delta values (e.g. 1000ms) for progression tests.
+- Isolate pure logic (fire-rate controller, collision helpers) for fast unit tests.
 
 ### Unit Tests
 Tests are in `src/tests/`. Run with:
