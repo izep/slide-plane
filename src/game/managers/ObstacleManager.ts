@@ -18,6 +18,7 @@ export class ObstacleManager {
     private obstacles: Obstacle[] = [];
     private spawnTimer: number = 0;
     private aimedSpawnTimer: number = 0;
+    private nextAimedInterval: number = 500;
     private currentSpawnInterval: number = OBSTACLE_SPAWN_INTERVAL;
     private currentSpeed: number = OBSTACLE_START_SPEED;
     private difficultyLevel: number = 0;
@@ -27,6 +28,7 @@ export class ObstacleManager {
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
+        this.nextAimedInterval = Phaser.Math.Between(500, 2000);
     }
 
     update(delta: number, playerY?: number): void {
@@ -44,10 +46,10 @@ export class ObstacleManager {
 
         // Update aimed spawn timer (every 0.5-2 seconds)
         this.aimedSpawnTimer += delta;
-        const aimedInterval = Phaser.Math.Between(500, 2000);
-        if (this.aimedSpawnTimer >= aimedInterval) {
+        if (this.aimedSpawnTimer >= this.nextAimedInterval) {
             this.spawnAimedObstacle();
             this.aimedSpawnTimer = 0;
+            this.nextAimedInterval = Phaser.Math.Between(500, 2000);
         }
 
         // Update difficulty
@@ -145,6 +147,7 @@ export class ObstacleManager {
         this.obstacles = [];
         this.spawnTimer = 0;
         this.aimedSpawnTimer = 0;
+        this.nextAimedInterval = Phaser.Math.Between(500, 2000);
         this.currentSpawnInterval = OBSTACLE_SPAWN_INTERVAL;
         this.currentSpeed = OBSTACLE_START_SPEED;
         this.difficultyLevel = 0;

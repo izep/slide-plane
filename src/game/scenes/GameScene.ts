@@ -6,7 +6,7 @@ import { ScoreManager } from '../managers/ScoreManager';
 import { EnemyPlaneManager } from '../managers/EnemyPlaneManager';
 import { MountainManager } from '../managers/MountainManager';
 import { EventBus, Events } from '../../utils/EventBus';
-import { AIRPLANE_START_X, AIRPLANE_START_Y, GAME_WIDTH, GAME_HEIGHT, COLOR_CLOUD } from '../config/Constants';
+import { AIRPLANE_START_X, AIRPLANE_START_Y, GAME_WIDTH, GAME_HEIGHT, COLOR_CLOUD, COLOR_POWERUP_BULLET, COLOR_POWERUP_ROCKET, COLOR_POWERUP_LASER } from '../config/Constants';
 
 export class GameScene extends Phaser.Scene {
     private airplane!: Airplane;
@@ -28,6 +28,54 @@ export class GameScene extends Phaser.Scene {
         graphics.fillStyle(0xffffff, 1);
         graphics.fillCircle(4, 4, 4);
         graphics.generateTexture('particle', 8, 8);
+        graphics.destroy();
+
+        // Create power-up textures
+        this.createPowerUpTextures();
+    }
+
+    private createPowerUpTextures(): void {
+        // Bullet power-up
+        let graphics = this.add.graphics();
+        graphics.fillStyle(COLOR_POWERUP_BULLET, 1);
+        graphics.fillCircle(0, 0, 15);
+        graphics.fillStyle(0x000000, 1);
+        graphics.fillEllipse(3, 0, 8, 4);
+        graphics.fillRect(-5, -2, 8, 4);
+        graphics.generateTexture('powerup-bullet', 32, 32);
+        graphics.destroy();
+
+        // Rocket power-up
+        graphics = this.add.graphics();
+        graphics.fillStyle(COLOR_POWERUP_ROCKET, 1);
+        graphics.fillCircle(0, 0, 15);
+        graphics.fillStyle(0x000000, 1);
+        graphics.fillRect(-6, -3, 12, 6);
+        graphics.beginPath();
+        graphics.moveTo(6, 0);
+        graphics.lineTo(10, -4);
+        graphics.lineTo(10, 4);
+        graphics.closePath();
+        graphics.fillPath();
+        graphics.fillStyle(0xff0000, 1);
+        graphics.fillTriangle(-6, -6, -6, -3, -10, -3);
+        graphics.fillTriangle(-6, 6, -6, 3, -10, 3);
+        graphics.generateTexture('powerup-rocket', 32, 32);
+        graphics.destroy();
+
+        // Laser power-up
+        graphics = this.add.graphics();
+        graphics.fillStyle(COLOR_POWERUP_LASER, 1);
+        graphics.fillCircle(0, 0, 15);
+        graphics.lineStyle(2, 0x000000, 1);
+        graphics.beginPath();
+        graphics.moveTo(-8, 0);
+        graphics.lineTo(-4, -4);
+        graphics.lineTo(0, 4);
+        graphics.lineTo(4, -4);
+        graphics.lineTo(8, 0);
+        graphics.strokePath();
+        graphics.generateTexture('powerup-laser', 32, 32);
         graphics.destroy();
     }
 

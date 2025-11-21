@@ -3,6 +3,7 @@ import { Mountain } from '../entities/Mountain';
 
 const MOUNTAIN_SPAWN_INTERVAL = 8000; // Every 8 seconds
 const MOUNTAIN_SPEED = 200; // Slower than obstacles
+const MOUNTAIN_SPEED_MULTIPLIER = 0.7; // Mountains move 70% the speed of obstacles
 
 export class MountainManager {
     private scene: Phaser.Scene;
@@ -16,7 +17,7 @@ export class MountainManager {
 
     update(delta: number, currentSpeed: number): void {
         // Update speed based on game difficulty
-        this.currentSpeed = currentSpeed * 0.7; // Mountains move slower than obstacles
+        this.currentSpeed = currentSpeed * MOUNTAIN_SPEED_MULTIPLIER;
         
         // Update spawn timer
         this.spawnTimer += delta;
