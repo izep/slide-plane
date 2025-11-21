@@ -30,9 +30,16 @@ export class PowerUpManager {
         this.spawnTimer += delta;
         if (this.spawnTimer >= POWERUP_SPAWN_INTERVAL) {
             if (Math.random() < POWERUP_SPAWN_CHANCE) {
+                console.log('[PowerUpManager] Spawning power-up');
                 this.spawnPowerUp();
+            } else {
+                console.log('[PowerUpManager] Power-up spawn chance missed');
             }
             this.spawnTimer = 0;
+        }
+        
+        if (Math.floor(this.spawnTimer / 1000) % 3 === 0 && this.spawnTimer > 1000 && this.spawnTimer < 1100) {
+            console.log('[PowerUpManager] Time until next spawn chance:', Math.floor((POWERUP_SPAWN_INTERVAL - this.spawnTimer) / 1000), 's');
         }
 
         // Update power-ups
@@ -133,7 +140,8 @@ export class PowerUpManager {
     }
 
     getTimeUntilNextPowerUp(): number {
-        return Math.max(0, POWERUP_SPAWN_INTERVAL - this.spawnTimer);
+        const timeRemaining = Math.max(0, POWERUP_SPAWN_INTERVAL - this.spawnTimer);
+        return timeRemaining;
     }
 
     removeProjectile(projectile: Projectile): void {

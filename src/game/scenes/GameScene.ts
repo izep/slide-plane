@@ -111,15 +111,26 @@ export class GameScene extends Phaser.Scene {
     }
 
     private startGame(): void {
+        console.log('[GameScene] startGame called');
         this.isPlaying = true;
         EventBus.emit(Events.GAME_START);
+        console.log('[GameScene] Game started, isPlaying:', this.isPlaying);
     }
 
     update(_time: number, delta: number): void {
-        if (!this.isPlaying || this.airplane.isDead) return;
+        if (!this.isPlaying || this.airplane.isDead) {
+            if (!this.isPlaying) {
+                console.log('[GameScene] Update skipped - not playing');
+            }
+            return;
+        }
 
         // Update distance traveled (1 pixel = 0.1 meters)
         this.distance += (delta / 1000) * 30; // 30 meters per second
+        
+        if (Math.floor(this.distance) % 50 === 0 && this.distance > 1) {
+            console.log('[GameScene] Distance:', Math.floor(this.distance), 'isPlaying:', this.isPlaying);
+        }
 
         // Update airplane
         this.airplane.update(delta);
@@ -310,7 +321,10 @@ export class GameScene extends Phaser.Scene {
     }
 
     public restartGame(): void {
-        // Reset all managers
+        console.log('[GameScene] restartGame called');
+        
+        // Clean up existing entities
+        this.airplane.destroy();
         this.obstacleManager.reset();
         this.powerUpManager.reset();
         this.scoreManager.reset();
@@ -318,13 +332,13 @@ export class GameScene extends Phaser.Scene {
         this.distance = 0;
 
         // Reset airplane
-        if (this.airplane) {
-            this.airplane.destroy();
-        }
         this.airplane = new Airplane(this, AIRPLANE_START_X, AIRPLANE_START_Y);
 
-        // Restart game
-        this.startGame();
+        // Restart the game
+        this.isPlaying = true;
+        EventBus.emit(Events.GAME_START);
+        
+        console.log('[GameScene] Game restarted, isPlaying:', this.isPlaying);
     }
 
     public getScoreManager(): ScoreManager {
@@ -336,10 +350,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     public getDistance(): number {
+        console.log('[GameScene] getDistance called, returning:', this.distance);
         return this.distance;
     }
 
     public getTimeUntilNextPowerUp(): number {
-        return this.powerUpManager.getTimeUntilNextPowerUp();
+        const time = this.powerUpManager.getTimeUntilNextPowerUp();
+        console.log('[GameScene] getTimeUntilNextPowerUp called, returning:', time);
+        return time;
     }
 }

@@ -36,8 +36,13 @@ function App() {
         const pollInterval = setInterval(() => {
             if (gameState === GameState.PLAYING && phaserRef.current?.scene) {
                 const scene = phaserRef.current.scene as GameScene;
-                setDistance(scene.getDistance());
-                setTimeUntilPowerUp(scene.getTimeUntilNextPowerUp());
+                const dist = scene.getDistance();
+                const powerupTime = scene.getTimeUntilNextPowerUp();
+                
+                console.log('[App] Poll - Distance:', dist, 'PowerupTime:', powerupTime);
+                
+                setDistance(dist);
+                setTimeUntilPowerUp(powerupTime);
             }
         }, 100); // Update 10 times per second
 
@@ -48,6 +53,8 @@ function App() {
     }, [gameState]);
 
     const handleStartGame = () => {
+        console.log('[App] handleStartGame called, current state:', gameState);
+        
         // Reset all UI state
         setDistance(0);
         setTimeUntilPowerUp(0);
@@ -56,14 +63,22 @@ function App() {
         setFinalTimeSurvived(0);
         
         setGameState(GameState.PLAYING);
+        console.log('[App] Game state set to PLAYING');
         
         // Wait for scene to be ready
         setTimeout(() => {
             if (phaserRef.current?.scene) {
                 const scene = phaserRef.current.scene as GameScene;
+                console.log('[App] Scene available:', !!scene);
+                
                 if (gameState === GameState.GAME_OVER) {
+                    console.log('[App] Calling restartGame from GAME_OVER state');
                     scene.restartGame();
+                } else {
+                    console.log('[App] Scene should auto-start on first play');
                 }
+            } else {
+                console.warn('[App] No scene available after timeout!');
             }
         }, 100);
     };
