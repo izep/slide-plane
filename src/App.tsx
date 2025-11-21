@@ -61,9 +61,6 @@ function App() {
     const handleStartGame = () => {
         console.log('[App] handleStartGame called, current state:', gameState);
         
-        // Capture the current state before changing it
-        const wasGameOver = gameState === GameState.GAME_OVER;
-        
         // Reset all UI state
         setDistance(0);
         setTimeUntilPowerUp(0);
@@ -74,20 +71,21 @@ function App() {
         setGameState(GameState.PLAYING);
         console.log('[App] Game state set to PLAYING');
         
-        // Wait for scene to be ready
+        // Use Phaser's scene restart mechanism for clean restart
         setTimeout(() => {
-            if (phaserRef.current?.scene) {
-                const scene = phaserRef.current.scene as GameScene;
-                console.log('[App] Scene available:', !!scene);
+            if (phaserRef.current?.game) {
+                const sceneManager = phaserRef.current.game.scene;
+                const gameScene = sceneManager.getScene('GameScene') as GameScene;
                 
-                if (wasGameOver) {
-                    console.log('[App] Calling restartGame from GAME_OVER state');
-                    scene.restartGame();
+                if (gameScene) {
+                    console.log('[App] Restarting GameScene');
+                    sceneManager.stop('GameScene');
+                    sceneManager.start('GameScene');
                 } else {
-                    console.log('[App] Scene should auto-start on first play');
+                    console.warn('[App] GameScene not found!');
                 }
             } else {
-                console.warn('[App] No scene available after timeout!');
+                console.warn('[App] No game available!');
             }
         }, 100);
     };
@@ -97,10 +95,13 @@ function App() {
         setDistance(0);
         setTimeUntilPowerUp(0);
         
-        if (phaserRef.current?.scene) {
-            const scene = phaserRef.current.scene as GameScene;
-            scene.restartGame();
-            setGameState(GameState.PLAYING);
+        setGameState(GameState.PLAYING);
+        
+        // Use Phaser's scene restart mechanism for clean restart
+        if (phaserRef.current?.game) {
+            const sceneManager = phaserRef.current.game.scene;
+            sceneManager.stop('GameScene');
+            sceneManager.start('GameScene');
         }
     };
 

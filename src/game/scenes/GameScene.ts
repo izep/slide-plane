@@ -4,6 +4,7 @@ import { ObstacleManager } from '../managers/ObstacleManager';
 import { PowerUpManager } from '../managers/PowerUpManager';
 import { ScoreManager } from '../managers/ScoreManager';
 import { EnemyPlaneManager } from '../managers/EnemyPlaneManager';
+import { MountainManager } from '../managers/MountainManager';
 import { EventBus, Events } from '../../utils/EventBus';
 import { AIRPLANE_START_X, AIRPLANE_START_Y, GAME_WIDTH, GAME_HEIGHT, COLOR_CLOUD } from '../config/Constants';
 
@@ -13,6 +14,7 @@ export class GameScene extends Phaser.Scene {
     private powerUpManager!: PowerUpManager;
     private scoreManager!: ScoreManager;
     private enemyPlaneManager!: EnemyPlaneManager;
+    private mountainManager!: MountainManager;
     private isPlaying: boolean = false;
     private distance: number = 0;
 
@@ -38,6 +40,7 @@ export class GameScene extends Phaser.Scene {
         this.powerUpManager = new PowerUpManager(this);
         this.scoreManager = new ScoreManager();
         this.enemyPlaneManager = new EnemyPlaneManager(this);
+        this.mountainManager = new MountainManager(this);
         this.distance = 0;
 
         // Create airplane
@@ -137,10 +140,12 @@ export class GameScene extends Phaser.Scene {
 
         // Update managers
         const difficultyLevel = this.obstacleManager.getDifficultyLevel();
-        this.obstacleManager.update(delta);
+        const airplanePos = this.airplane.getPosition();
+        this.obstacleManager.update(delta, airplanePos.y);
         this.powerUpManager.update(delta);
         this.scoreManager.update(delta);
-        this.enemyPlaneManager.update(delta, difficultyLevel, this.airplane.getPosition().y);
+        this.enemyPlaneManager.update(delta, difficultyLevel, airplanePos.y);
+        this.mountainManager.update(delta, this.obstacleManager['currentSpeed']);
 
         // Check collisions
         this.checkCollisions();
@@ -198,7 +203,13 @@ export class GameScene extends Phaser.Scene {
             if (powerUp.isCollected) return;
 
             const powerUpSprite = powerUp.getSprite();
-            const powerUpBounds = powerUpSprite.getBounds();
+            const powerUpBody = powerUpSprite.body as Phaser.Physics.Arcade.Body;
+            const powerUpBounds = new Phaser.Geom.Rectangle(
+                powerUpSprite.x - powerUpBody.width / 2,
+                powerUpSprite.y - powerUpBody.height / 2,
+                powerUpBody.width,
+                powerUpBody.height
+            );
 
             if (Phaser.Geom.Intersects.RectangleToRectangle(airplaneBounds, powerUpBounds)) {
                 powerUp.collect();
@@ -276,6 +287,56 @@ export class GameScene extends Phaser.Scene {
                 }
             });
         });
+
+        // Check obstacles vs mountains (blocks crash into mountains)
+        this.mountainManager.getMountains().forEach(mountain => {
+            if (mountain.isDead) return;
+
+            const mountainSprite = mountain.getSprite();
+            const mountainBody = mountainSprite.body as Phaser.Physics.Arcade.Body;
+            const mountainBounds = new Phaser.Geom.Rectangle(
+                mountainSprite.x - mountainBody.width / 2,
+                mountainSprite.y - mountainBody.height / 2,
+                mountainBody.width,
+                mountainBody.height
+            );
+
+            this.obstacleManager.getObstacles().forEach(obstacle => {
+                if (obstacle.isDead) return;
+
+                const obstacleSprite = obstacle.getSprite();
+                const obstacleBody = obstacleSprite.body as Phaser.Physics.Arcade.Body;
+                const obstacleBounds = new Phaser.Geom.Rectangle(
+                    obstacleSprite.x - obstacleBody.width / 2,
+                    obstacleSprite.y - obstacleBody.height / 2,
+                    obstacleBody.width,
+                    obstacleBody.height
+                );
+
+                if (Phaser.Geom.Intersects.RectangleToRectangle(mountainBounds, obstacleBounds)) {
+                    obstacle.explode();
+                    this.obstacleManager.removeObstacle(obstacle);
+                }
+            });
+        });
+
+        // Check airplane vs mountains
+        this.mountainManager.getMountains().forEach(mountain => {
+            if (mountain.isDead) return;
+
+            const mountainSprite = mountain.getSprite();
+            const mountainBody = mountainSprite.body as Phaser.Physics.Arcade.Body;
+            const mountainBounds = new Phaser.Geom.Rectangle(
+                mountainSprite.x - mountainBody.width / 2,
+                mountainSprite.y - mountainBody.height / 2,
+                mountainBody.width,
+                mountainBody.height
+            );
+
+            if (Phaser.Geom.Intersects.RectangleToRectangle(airplaneBounds, mountainBounds)) {
+                this.handleAirplaneCollision();
+            }
+        });
     }
 
     private handleAirplaneCollision(): void {
@@ -329,6 +390,7 @@ export class GameScene extends Phaser.Scene {
         this.powerUpManager.reset();
         this.scoreManager.reset();
         this.enemyPlaneManager.reset();
+        this.mountainManager.reset();
         this.distance = 0;
 
         // Reset airplane

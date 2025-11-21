@@ -11,7 +11,7 @@ import {
 
 export class PowerUp {
     private scene: Phaser.Scene;
-    private sprite: Phaser.GameObjects.Rectangle;
+    private sprite: Phaser.GameObjects.Container;
     private type: PowerUpType;
     public isCollected: boolean = false;
 
@@ -19,8 +19,7 @@ export class PowerUp {
         this.scene = scene;
         this.type = type;
 
-        const color = this.getColorForType(type);
-        this.sprite = scene.add.rectangle(x, y, 30, 30, color);
+        this.sprite = this.createPowerUpSprite(scene, x, y, type);
         scene.physics.add.existing(this.sprite);
         
         const body = this.sprite.body as Phaser.Physics.Arcade.Body;
@@ -37,6 +36,52 @@ export class PowerUp {
         });
     }
 
+    private createPowerUpSprite(scene: Phaser.Scene, x: number, y: number, type: PowerUpType): Phaser.GameObjects.Container {
+        const graphics = scene.add.graphics();
+        const color = this.getColorForType(type);
+        
+        // Background circle
+        graphics.fillStyle(color, 1);
+        graphics.fillCircle(0, 0, 15);
+        
+        // Icon based on type
+        graphics.fillStyle(0x000000, 1);
+        if (type === PowerUpType.BULLET) {
+            // Draw bullet icon - simple bullet shape
+            graphics.fillEllipse(3, 0, 8, 4);
+            graphics.fillRect(-5, -2, 8, 4);
+        } else if (type === PowerUpType.ROCKET) {
+            // Draw rocket icon - rocket with fins
+            graphics.fillRect(-6, -3, 12, 6);
+            graphics.beginPath();
+            graphics.moveTo(6, 0);
+            graphics.lineTo(10, -4);
+            graphics.lineTo(10, 4);
+            graphics.closePath();
+            graphics.fillPath();
+            // Fins
+            graphics.fillStyle(0xff0000, 1);
+            graphics.fillTriangle(-6, -6, -6, -3, -10, -3);
+            graphics.fillTriangle(-6, 6, -6, 3, -10, 3);
+        } else if (type === PowerUpType.LASER) {
+            // Draw laser icon - zigzag beam
+            graphics.lineStyle(2, 0x000000, 1);
+            graphics.beginPath();
+            graphics.moveTo(-8, 0);
+            graphics.lineTo(-4, -4);
+            graphics.lineTo(0, 4);
+            graphics.lineTo(4, -4);
+            graphics.lineTo(8, 0);
+            graphics.strokePath();
+        }
+        
+        graphics.generateTexture(`powerup-${type}`, 32, 32);
+        graphics.destroy();
+        
+        const sprite = scene.add.sprite(0, 0, `powerup-${type}`);
+        return scene.add.container(x, y, [sprite]);
+    }
+
     private getColorForType(type: PowerUpType): number {
         switch (type) {
             case PowerUpType.BULLET: return COLOR_POWERUP_BULLET;
@@ -51,7 +96,7 @@ export class PowerUp {
         }
     }
 
-    getSprite(): Phaser.GameObjects.Rectangle {
+    getSprite(): Phaser.GameObjects.Container {
         return this.sprite;
     }
 
