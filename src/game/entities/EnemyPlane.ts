@@ -155,14 +155,14 @@ export class EnemyPlane {
         const maxY = this.scene.scale.height - ENEMY_PLANE_SIZE / 2;
         this.sprite.y = Phaser.Math.Clamp(this.sprite.y, minY, maxY);
 
-        // Check if off screen (left side)
-        if (this.sprite.x < -ENEMY_PLANE_SIZE) {
+        // Check if off screen (right side - enemy planes move from left to right)
+        if (this.sprite.x > this.scene.scale.width + ENEMY_PLANE_SIZE) {
             this.destroy();
         }
     }
 
     isOffScreen(): boolean {
-        return this.sprite.x < -ENEMY_PLANE_SIZE;
+        return this.sprite.x > this.scene.scale.width + ENEMY_PLANE_SIZE;
     }
 
     getSprite(): Phaser.GameObjects.Graphics {

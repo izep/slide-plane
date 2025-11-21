@@ -32,6 +32,13 @@ function App() {
 
         EventBus.on(Events.GAME_OVER, handleGameOver);
 
+        return () => {
+            EventBus.off(Events.GAME_OVER, handleGameOver);
+        };
+    }, []);
+
+    // Separate effect for polling to avoid recreating interval
+    useEffect(() => {
         // Poll game scene for distance and powerup time while playing
         const pollInterval = setInterval(() => {
             if (gameState === GameState.PLAYING && phaserRef.current?.scene) {
@@ -47,13 +54,15 @@ function App() {
         }, 100); // Update 10 times per second
 
         return () => {
-            EventBus.off(Events.GAME_OVER, handleGameOver);
             clearInterval(pollInterval);
         };
     }, [gameState]);
 
     const handleStartGame = () => {
         console.log('[App] handleStartGame called, current state:', gameState);
+        
+        // Capture the current state before changing it
+        const wasGameOver = gameState === GameState.GAME_OVER;
         
         // Reset all UI state
         setDistance(0);
@@ -71,7 +80,7 @@ function App() {
                 const scene = phaserRef.current.scene as GameScene;
                 console.log('[App] Scene available:', !!scene);
                 
-                if (gameState === GameState.GAME_OVER) {
+                if (wasGameOver) {
                     console.log('[App] Calling restartGame from GAME_OVER state');
                     scene.restartGame();
                 } else {
