@@ -33,7 +33,7 @@
         "test:ui": "vitest --ui",
         "test:run": "vitest run",
         "test:coverage": "vitest run --coverage",
-        "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
         "type-check": "tsc --noEmit",
         "precommit": "npm run type-check && npm run lint && npm run test:run"
     },
