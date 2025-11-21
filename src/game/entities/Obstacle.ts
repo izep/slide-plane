@@ -6,34 +6,42 @@ export class Obstacle {
     private scene: Phaser.Scene;
     private sprite: Phaser.GameObjects.Graphics;
     private type: ObstacleType;
-    private speed: number;
     private size: number;
-    private moveDirection: number = 1; // For vertical movement
     private minY: number;
     private maxY: number;
+    private rotation: number = 0;
+    private rotationSpeed: number;
     public isDead: boolean = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, type: ObstacleType, speed: number, size: number) {
         this.scene = scene;
         this.type = type;
-        this.speed = speed;
         this.size = size;
+        this.rotationSpeed = Phaser.Math.FloatBetween(-0.02, 0.02);
 
         // Create crate-style obstacle
         this.sprite = this.createCrate(scene, x, y, size);
         scene.physics.add.existing(this.sprite);
         
         const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-        body.setVelocityX(-speed);
+        
+        // Vary the movement angles
+        if (type === ObstacleType.MOVING_VERTICAL) {
+            // Random diagonal movement
+            const angle = Phaser.Math.FloatBetween(-45, 45); // degrees
+            const angleRad = Phaser.Math.DegToRad(angle);
+            body.setVelocityX(-speed * Math.cos(angleRad));
+            body.setVelocityY(speed * Math.sin(angleRad));
+        } else {
+            // Straight or slight variation
+            const yVariation = Phaser.Math.FloatBetween(-20, 20);
+            body.setVelocityX(-speed);
+            body.setVelocityY(yVariation);
+        }
 
         // Setup movement bounds for vertical movement
         this.minY = size / 2;
         this.maxY = scene.scale.height - size / 2;
-        
-        // For diagonal movement, set initial Y velocity
-        if (type === ObstacleType.MOVING_VERTICAL) {
-            body.setVelocityY(speed * this.moveDirection);
-        }
     }
 
     private createCrate(scene: Phaser.Scene, x: number, y: number, size: number): Phaser.GameObjects.Graphics {
@@ -70,18 +78,22 @@ export class Obstacle {
         return graphics;
     }
 
-    update(delta: number): void {
+    update(): void {
         if (this.isDead) return;
 
-        // Handle diagonal bouncing for moving obstacles
+        // Rotate the crate for visual effect
+        this.rotation += this.rotationSpeed;
+        this.sprite.setRotation(this.rotation);
+
+        // Handle bouncing for moving obstacles
         if (this.type === ObstacleType.MOVING_VERTICAL) {
             const body = this.sprite.body as Phaser.Physics.Arcade.Body;
             
-            // Bounce off top or bottom edges
+            // Bounce off top or bottom edges with some randomness
             if (this.sprite.y <= this.minY && body.velocity.y < 0) {
-                body.setVelocityY(Math.abs(body.velocity.y));
+                body.setVelocityY(Math.abs(body.velocity.y) * Phaser.Math.FloatBetween(0.8, 1.2));
             } else if (this.sprite.y >= this.maxY && body.velocity.y > 0) {
-                body.setVelocityY(-Math.abs(body.velocity.y));
+                body.setVelocityY(-Math.abs(body.velocity.y) * Phaser.Math.FloatBetween(0.8, 1.2));
             }
         }
 

@@ -44,7 +44,7 @@ export class ObstacleManager {
 
         // Update all obstacles
         this.obstacles.forEach(obstacle => {
-            obstacle.update(delta);
+            obstacle.update();
         });
 
         // Remove off-screen or dead obstacles

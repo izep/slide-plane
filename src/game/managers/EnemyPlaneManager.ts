@@ -38,7 +38,7 @@ export class EnemyPlaneManager {
     }
 
     private spawnEnemyPlane(): void {
-        const x = this.scene.scale.width + 100; // Spawn from behind
+        const x = -100; // Spawn from behind (left side)
         const y = Phaser.Math.Between(50, this.scene.scale.height - 50);
 
         const enemy = new EnemyPlane(this.scene, x, y, ENEMY_PLANE_SPEED + (this.currentDifficulty * 10));

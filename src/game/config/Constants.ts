@@ -1,5 +1,3 @@
-import { PowerUpType, ObstacleType } from '../../types/GameTypes';
-
 export const GAME_WIDTH = 1024;
 export const GAME_HEIGHT = 768;
 
@@ -30,8 +28,8 @@ export const MAX_DIFFICULTY_LEVEL = 10;
 
 // Power-up constants
 export const POWERUP_DURATION = 5000; // milliseconds
-export const POWERUP_SPAWN_CHANCE = 0.15; // 15% chance
-export const POWERUP_SPAWN_INTERVAL = 15000; // check every 15 seconds
+export const POWERUP_SPAWN_CHANCE = 0.3; // 30% chance (increased from 15%)
+export const POWERUP_SPAWN_INTERVAL = 10000; // check every 10 seconds (reduced from 15)
 
 export const BULLET_FIRE_RATE = 200; // milliseconds
 export const ROCKET_FIRE_RATE = 500;

@@ -207,6 +207,37 @@ Consider adding:
 - [ ] Pause menu
 - [ ] Settings panel
 
+## Version Management & Cache Busting
+
+### Version Numbering
+Update the version in `package.json` for each deployment:
+```json
+{
+  "version": "1.0.1"  // Increment for each deployment
+}
+```
+
+### Automatic Cache Busting
+Vite automatically generates unique hashes for JS/CSS files on each build:
+- `index-DQ2KALDe.js` (hash changes with each build)
+- `phaser-BUlrDfUd.js`
+
+### Force Browser Update
+If changes aren't visible after deployment, users need to hard refresh:
+- **Windows/Linux**: `Ctrl + Shift + R` or `Ctrl + F5`
+- **Mac**: `Cmd + Shift + R`
+- **Or**: DevTools → Application → Clear Storage
+
+### Deployment Checklist
+- [ ] Run tests: `npm run test:run`
+- [ ] Type check: `npm run type-check`
+- [ ] Lint: `npm run lint`
+- [ ] Update version in `package.json`
+- [ ] Build: `npm run build`
+- [ ] Deploy: `npm run deploy`
+- [ ] Verify at https://izep.github.io/slide-plane/
+- [ ] Hard refresh browser to see changes
+
 ---
 
 **Game is ready to play!** Start with `npm run dev` to test locally.

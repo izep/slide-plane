@@ -1,7 +1,7 @@
 {
     "name": "slide-plane",
     "description": "A fast-paced side-scrolling airplane game built with Phaser 3, React, and TypeScript.",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/izep/slide-plane.git"
@@ -28,7 +28,14 @@
         "build": "node log.js build & vite build --config vite/config.prod.mjs",
         "dev-nolog": "vite --config vite/config.dev.mjs",
         "build-nolog": "vite build --config vite/config.prod.mjs",
-        "deploy": "gh-pages -d dist"
+        "deploy": "gh-pages -d dist",
+        "test": "vitest",
+        "test:ui": "vitest --ui",
+        "test:run": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "type-check": "tsc --noEmit",
+        "precommit": "npm run type-check && npm run lint && npm run test:run"
     },
     "dependencies": {
         "phaser": "^3.90.0",
@@ -37,17 +44,24 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.22.0",
+        "@testing-library/jest-dom": "^6.9.1",
+        "@testing-library/react": "^16.3.0",
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
         "@vitejs/plugin-react": "^4.3.4",
+        "@vitest/ui": "^4.0.12",
         "eslint": "^9.22.0",
         "eslint-plugin-react-hooks": "^5.2.0",
         "eslint-plugin-react-refresh": "^0.4.19",
         "gh-pages": "^6.3.0",
         "globals": "^16.0.0",
+        "husky": "^9.1.7",
+        "jsdom": "^27.2.0",
+        "lint-staged": "^16.2.7",
         "terser": "^5.28.1",
         "typescript": "~5.7.2",
         "typescript-eslint": "^8.26.1",
-        "vite": "^6.3.1"
+        "vite": "^6.3.1",
+        "vitest": "^4.0.12"
     }
 }

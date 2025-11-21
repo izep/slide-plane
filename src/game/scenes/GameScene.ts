@@ -115,7 +115,7 @@ export class GameScene extends Phaser.Scene {
         EventBus.emit(Events.GAME_START);
     }
 
-    update(time: number, delta: number): void {
+    update(_time: number, delta: number): void {
         if (!this.isPlaying || this.airplane.isDead) return;
 
         // Update distance traveled (1 pixel = 0.1 meters)
@@ -154,14 +154,26 @@ export class GameScene extends Phaser.Scene {
 
     private checkCollisions(): void {
         const airplaneSprite = this.airplane.getSprite();
-        const airplaneBounds = airplaneSprite.getBounds();
+        const body = airplaneSprite.body as Phaser.Physics.Arcade.Body;
+        const airplaneBounds = new Phaser.Geom.Rectangle(
+            airplaneSprite.x - body.width / 2,
+            airplaneSprite.y - body.height / 2,
+            body.width,
+            body.height
+        );
 
         // Check airplane vs obstacles
         this.obstacleManager.getObstacles().forEach(obstacle => {
             if (obstacle.isDead) return;
 
             const obstacleSprite = obstacle.getSprite();
-            const obstacleBounds = obstacleSprite.getBounds();
+            const obstacleBody = obstacleSprite.body as Phaser.Physics.Arcade.Body;
+            const obstacleBounds = new Phaser.Geom.Rectangle(
+                obstacleSprite.x - obstacleBody.width / 2,
+                obstacleSprite.y - obstacleBody.height / 2,
+                obstacleBody.width,
+                obstacleBody.height
+            );
 
             if (Phaser.Geom.Intersects.RectangleToRectangle(airplaneBounds, obstacleBounds)) {
                 this.handleAirplaneCollision();
@@ -189,7 +201,13 @@ export class GameScene extends Phaser.Scene {
             if (enemy.isDead) return;
 
             const enemySprite = enemy.getSprite();
-            const enemyBounds = enemySprite.getBounds();
+            const enemyBody = enemySprite.body as Phaser.Physics.Arcade.Body;
+            const enemyBounds = new Phaser.Geom.Rectangle(
+                enemySprite.x - enemyBody.width / 2,
+                enemySprite.y - enemyBody.height / 2,
+                enemyBody.width,
+                enemyBody.height
+            );
 
             if (Phaser.Geom.Intersects.RectangleToRectangle(airplaneBounds, enemyBounds)) {
                 this.handleAirplaneCollision();
@@ -210,7 +228,13 @@ export class GameScene extends Phaser.Scene {
                 if (obstacle.isDead) return;
 
                 const obstacleSprite = obstacle.getSprite();
-                const obstacleBounds = obstacleSprite.getBounds();
+                const obstacleBody = obstacleSprite.body as Phaser.Physics.Arcade.Body;
+                const obstacleBounds = new Phaser.Geom.Rectangle(
+                    obstacleSprite.x - obstacleBody.width / 2,
+                    obstacleSprite.y - obstacleBody.height / 2,
+                    obstacleBody.width,
+                    obstacleBody.height
+                );
 
                 if (Phaser.Geom.Intersects.RectangleToRectangle(projectileBounds, obstacleBounds)) {
                     obstacle.explode();
@@ -225,7 +249,13 @@ export class GameScene extends Phaser.Scene {
                 if (enemy.isDead) return;
 
                 const enemySprite = enemy.getSprite();
-                const enemyBounds = enemySprite.getBounds();
+                const enemyBody = enemySprite.body as Phaser.Physics.Arcade.Body;
+                const enemyBounds = new Phaser.Geom.Rectangle(
+                    enemySprite.x - enemyBody.width / 2,
+                    enemySprite.y - enemyBody.height / 2,
+                    enemyBody.width,
+                    enemyBody.height
+                );
 
                 if (Phaser.Geom.Intersects.RectangleToRectangle(projectileBounds, enemyBounds)) {
                     enemy.explode();

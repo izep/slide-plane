@@ -1,46 +1,138 @@
 import Phaser from 'phaser';
-import { ENEMY_PLANE_SPEED, ENEMY_PLANE_SIZE, COLOR_ENEMY_PLANE } from '../config/Constants';
+import { ENEMY_PLANE_SIZE, COLOR_ENEMY_PLANE } from '../config/Constants';
+
+// Cat color palettes for variety
+const CAT_COLORS = [
+    { fur: 0xFF8C00, stripes: 0x8B4513, name: 'orange' },      // Orange tabby
+    { fur: 0x000000, stripes: 0x1a1a1a, name: 'black' },       // Black cat
+    { fur: 0xFFFFFF, stripes: 0xE0E0E0, name: 'white' },       // White cat
+    { fur: 0x808080, stripes: 0x505050, name: 'gray' },        // Gray cat
+    { fur: 0xD2691E, stripes: 0x8B4513, name: 'brown' },       // Brown tabby
+    { fur: 0xF5DEB3, stripes: 0xD2B48C, name: 'siamese' },     // Siamese
+    { fur: 0x4A4A4A, stripes: 0x000000, name: 'tuxedo' },      // Tuxedo
+];
 
 export class EnemyPlane {
     private scene: Phaser.Scene;
     private sprite: Phaser.GameObjects.Graphics;
     private speed: number;
-    private targetY: number;
     public isDead: boolean = false;
+    private catColor: typeof CAT_COLORS[0];
 
     constructor(scene: Phaser.Scene, x: number, y: number, speed: number) {
         this.scene = scene;
         this.speed = speed;
-        this.targetY = y;
+        this.catColor = CAT_COLORS[Math.floor(Math.random() * CAT_COLORS.length)];
 
-        // Create enemy plane sprite (red, facing left)
+        // Create enemy plane sprite (chasing from behind, facing right)
         this.sprite = this.createEnemyPlane(scene, x, y);
         scene.physics.add.existing(this.sprite);
         
         const body = this.sprite.body as Phaser.Physics.Arcade.Body;
-        body.setVelocityX(-speed);
+        body.setVelocityX(speed); // Positive velocity to chase from behind
         body.setSize(ENEMY_PLANE_SIZE, ENEMY_PLANE_SIZE * 0.6);
     }
 
     private createEnemyPlane(scene: Phaser.Scene, x: number, y: number): Phaser.GameObjects.Graphics {
         const graphics = scene.add.graphics({ x, y });
         
-        // Red enemy plane (facing left, chasing player)
+        // Red enemy plane (facing right, chasing from behind)
         graphics.fillStyle(COLOR_ENEMY_PLANE, 1);
         
-        // Fuselage
-        graphics.fillRect(-20, -6, 40, 12);
+        // Fuselage (facing right)
+        graphics.fillRect(-20, -8, 45, 16);
+        graphics.fillCircle(23, 0, 9); // rounded nose on right
         
         // Wings
-        graphics.fillRect(-10, -15, 20, 30);
+        graphics.fillRect(-15, -18, 30, 36);
         
-        // Tail
-        graphics.fillRect(18, -4, 8, 8);
-        graphics.fillRect(20, -8, 6, 6);
+        // Tail (on left now)
+        graphics.fillRect(-25, -6, 10, 12);
+        graphics.fillRect(-27, -12, 8, 8); // tail fin
         
-        // Propeller
+        // Propeller (on right, darker red)
         graphics.fillStyle(0x660000, 1);
-        graphics.fillCircle(-22, 0, 5);
+        graphics.fillCircle(28, 0, 7);
+        
+        // Cat pilot (facing right, using random color)
+        const catFur = this.catColor.fur;
+        const catStripes = this.catColor.stripes;
+        
+        // Cat head (round)
+        graphics.fillStyle(catFur, 1);
+        graphics.fillCircle(5, -2, 10);
+        
+        // Pointy ears (triangular, facing right)
+        graphics.beginPath();
+        graphics.moveTo(2, -10);
+        graphics.lineTo(6, -16);
+        graphics.lineTo(10, -10);
+        graphics.closePath();
+        graphics.fillPath();
+        
+        graphics.beginPath();
+        graphics.moveTo(-8, -10);
+        graphics.lineTo(-4, -16);
+        graphics.lineTo(0, -10);
+        graphics.closePath();
+        graphics.fillPath();
+        
+        // Inner ear (pink, facing right)
+        graphics.fillStyle(0xFFB6C1, 1);
+        graphics.beginPath();
+        graphics.moveTo(4, -11);
+        graphics.lineTo(6, -14);
+        graphics.lineTo(8, -11);
+        graphics.closePath();
+        graphics.fillPath();
+        
+        graphics.beginPath();
+        graphics.moveTo(-6, -11);
+        graphics.lineTo(-4, -14);
+        graphics.lineTo(-2, -11);
+        graphics.closePath();
+        graphics.fillPath();
+        
+        // Stripes or markings (if not white/black, facing right)
+        if (this.catColor.name === 'orange' || this.catColor.name === 'brown') {
+            graphics.lineStyle(2, catStripes, 1);
+            graphics.lineBetween(2, -6, 8, -6);
+            graphics.lineBetween(2, -2, 8, -2);
+            graphics.lineBetween(2, 2, 8, 2);
+        }
+        
+        // Snout/muzzle (lighter, on right side)
+        const muzzleColor = catFur === 0x000000 ? 0x2a2a2a : 
+                           catFur === 0xFFFFFF ? 0xFFFFFF : 
+                           Phaser.Display.Color.GetColor(
+                               Math.min(255, Phaser.Display.Color.IntegerToRGB(catFur).r + 40),
+                               Math.min(255, Phaser.Display.Color.IntegerToRGB(catFur).g + 40),
+                               Math.min(255, Phaser.Display.Color.IntegerToRGB(catFur).b + 40)
+                           );
+        graphics.fillStyle(muzzleColor, 1);
+        graphics.fillCircle(8, 2, 6);
+        
+        // Nose (small black triangle, facing right)
+        graphics.fillStyle(0x000000, 1);
+        graphics.beginPath();
+        graphics.moveTo(10, 0);
+        graphics.lineTo(8, 3);
+        graphics.lineTo(12, 3);
+        graphics.closePath();
+        graphics.fillPath();
+        
+        // Evil pilot goggles (red tinted, facing right)
+        graphics.fillStyle(0x8B0000, 0.7);
+        graphics.fillCircle(2, -3, 4);
+        graphics.fillCircle(8, -3, 4);
+        graphics.lineStyle(2, 0x8B0000, 1);
+        graphics.strokeCircle(2, -3, 4);
+        graphics.strokeCircle(8, -3, 4);
+        graphics.lineBetween(4, -3, 6, -3); // bridge
+        
+        // Flight helmet (dark)
+        graphics.fillStyle(0x2a2a2a, 1);
+        graphics.fillEllipse(-5, -10, 12, 7);
         
         return graphics;
     }

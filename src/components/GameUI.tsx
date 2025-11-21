@@ -77,12 +77,9 @@ export const GameUI: React.FC<GameUIProps> = ({ isPlaying, distance = 0, timeUnt
                     <span className="hud-label">Lives:</span>
                     <span className="hud-value">{'❤️'.repeat(lives)}</span>
                 </div>
-            </div>
-            
-            <div className="hud-bottom">
-                <div className="hud-item-small">
-                    <span className="hud-label-small">Next Power-up:</span>
-                    <span className="hud-value-small">{Math.ceil(timeUntilPowerUp / 1000)}s</span>
+                <div className="hud-item">
+                    <span className="hud-label">Next Power-up:</span>
+                    <span className="hud-value">{Math.ceil(timeUntilPowerUp / 1000)}s</span>
                 </div>
             </div>
             

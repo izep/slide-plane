@@ -13,13 +13,11 @@ export class PowerUp {
     private scene: Phaser.Scene;
     private sprite: Phaser.GameObjects.Rectangle;
     private type: PowerUpType;
-    private speed: number;
     public isCollected: boolean = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, type: PowerUpType, speed: number) {
         this.scene = scene;
         this.type = type;
-        this.speed = speed;
 
         const color = this.getColorForType(type);
         this.sprite = scene.add.rectangle(x, y, 30, 30, color);

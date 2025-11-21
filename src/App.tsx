@@ -48,6 +48,13 @@ function App() {
     }, [gameState]);
 
     const handleStartGame = () => {
+        // Reset all UI state
+        setDistance(0);
+        setTimeUntilPowerUp(0);
+        setFinalScore(0);
+        setFinalHighScore(0);
+        setFinalTimeSurvived(0);
+        
         setGameState(GameState.PLAYING);
         
         // Wait for scene to be ready
@@ -62,6 +69,10 @@ function App() {
     };
 
     const handleRestart = () => {
+        // Reset UI state first
+        setDistance(0);
+        setTimeUntilPowerUp(0);
+        
         if (phaserRef.current?.scene) {
             const scene = phaserRef.current.scene as GameScene;
             scene.restartGame();

@@ -23,40 +23,89 @@ export class Airplane {
     private createWWIIPlane(scene: Phaser.Scene, x: number, y: number): Phaser.GameObjects.Container {
         const graphics = scene.add.graphics();
         
-        // Plane fuselage (gray)
+        // Fuselage (longer, sleeker)
         graphics.fillStyle(COLOR_AIRPLANE, 1);
-        graphics.fillRect(-25, -8, 50, 16);
+        graphics.fillRect(-30, -10, 60, 20);
+        graphics.fillCircle(28, 0, 10); // rounded nose
         
-        // Wings
-        graphics.fillRect(-15, -20, 30, 40);
+        // Wings (biplane style)
+        graphics.fillRect(-20, -28, 40, 56);
+        graphics.fillRect(-18, -32, 36, 8); // top wing
+        graphics.fillRect(-18, 24, 36, 8); // bottom wing strut
         
-        // Tail
-        graphics.fillRect(-28, -6, 10, 12);
-        graphics.fillRect(-30, -12, 8, 8); // tail fin
+        // Wing struts
+        graphics.lineStyle(2, 0x666666, 1);
+        graphics.lineBetween(-15, -24, -15, 24);
+        graphics.lineBetween(0, -24, 0, 24);
+        graphics.lineBetween(15, -24, 15, 24);
         
-        // Propeller nose (darker)
-        graphics.fillStyle(0x666666, 1);
-        graphics.fillCircle(28, 0, 6);
+        // Tail assembly
+        graphics.fillStyle(COLOR_AIRPLANE, 1);
+        graphics.fillRect(-35, -8, 12, 16);
+        graphics.fillRect(-38, -16, 10, 12); // vertical stabilizer
+        graphics.fillRect(-38, 4, 10, 12); // horizontal stabilizer
         
-        // Dog pilot
-        // White head
+        // Propeller (darker metal)
+        graphics.fillStyle(0x444444, 1);
+        graphics.fillCircle(35, 0, 8);
+        graphics.fillRect(33, -20, 4, 40); // propeller blade vertical
+        graphics.fillRect(15, -2, 20, 4); // propeller blade horizontal
+        
+        // Cockpit window (darker)
+        graphics.fillStyle(0x87CEEB, 0.6);
+        graphics.fillRect(-8, -8, 16, 16);
+        
+        // Dog pilot (bigger, more detailed)
+        // White fluffy body
         graphics.fillStyle(COLOR_DOG_WHITE, 1);
-        graphics.fillCircle(10, -2, 8);
+        graphics.fillCircle(5, 0, 12); // head
+        graphics.fillCircle(2, 4, 8); // snout
         
-        // Black ears
+        // Black nose
         graphics.fillStyle(COLOR_DOG_BLACK, 1);
-        graphics.fillEllipse(5, -8, 6, 10); // left ear
-        graphics.fillEllipse(15, -8, 6, 10); // right ear
+        graphics.fillCircle(6, 4, 3);
+        
+        // Floppy ears (using arcs instead of rotated ellipses)
+        graphics.fillStyle(COLOR_DOG_WHITE, 1);
+        // Left ear
+        graphics.beginPath();
+        graphics.arc(-2, -6, 6, 0, Math.PI, false);
+        graphics.fillPath();
+        // Right ear
+        graphics.beginPath();
+        graphics.arc(12, -6, 6, 0, Math.PI, false);
+        graphics.fillPath();
+        
+        // Inner ear (pink)
+        graphics.fillStyle(0xFFB6C1, 1);
+        // Left inner ear
+        graphics.beginPath();
+        graphics.arc(-2, -6, 3, 0, Math.PI, false);
+        graphics.fillPath();
+        // Right inner ear
+        graphics.beginPath();
+        graphics.arc(12, -6, 3, 0, Math.PI, false);
+        graphics.fillPath();
         
         // Goggles
         graphics.fillStyle(COLOR_GOGGLES, 1);
-        graphics.fillRect(8, -4, 8, 4);
+        graphics.fillCircle(2, -1, 5); // left lens
+        graphics.fillCircle(8, -1, 5); // right lens
+        graphics.lineStyle(2, COLOR_GOGGLES, 1);
+        graphics.strokeCircle(2, -1, 5);
+        graphics.strokeCircle(8, -1, 5);
+        graphics.lineBetween(7, -1, 3, -1); // bridge
         
         // Flight cap
         graphics.fillStyle(COLOR_GOGGLES, 1);
-        graphics.fillEllipse(10, -8, 10, 6);
+        graphics.fillEllipse(5, -10, 14, 8); // x, y, width, height
         
-        graphics.generateTexture('ww2plane', 60, 50);
+        // Goggles strap
+        graphics.lineStyle(2, COLOR_GOGGLES, 1);
+        graphics.lineBetween(-3, -1, -7, 0);
+        graphics.lineBetween(13, -1, 17, 0);
+        
+        graphics.generateTexture('ww2plane', 80, 70);
         graphics.destroy();
         
         const planeSprite = scene.add.sprite(0, 0, 'ww2plane');
