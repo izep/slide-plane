@@ -3,16 +3,18 @@ import { Airplane } from '../entities/Airplane';
 import { ObstacleManager } from '../managers/ObstacleManager';
 import { PowerUpManager } from '../managers/PowerUpManager';
 import { ScoreManager } from '../managers/ScoreManager';
+import { EnemyPlaneManager } from '../managers/EnemyPlaneManager';
 import { EventBus, Events } from '../../utils/EventBus';
-import { AIRPLANE_START_X, AIRPLANE_START_Y, GAME_WIDTH, GAME_HEIGHT } from '../config/Constants';
+import { AIRPLANE_START_X, AIRPLANE_START_Y, GAME_WIDTH, GAME_HEIGHT, COLOR_CLOUD } from '../config/Constants';
 
 export class GameScene extends Phaser.Scene {
     private airplane!: Airplane;
     private obstacleManager!: ObstacleManager;
     private powerUpManager!: PowerUpManager;
     private scoreManager!: ScoreManager;
+    private enemyPlaneManager!: EnemyPlaneManager;
     private isPlaying: boolean = false;
-    private backgroundSpeed: number = 2;
+    private distance: number = 0;
 
     constructor() {
         super({ key: 'GameScene' });
@@ -35,6 +37,8 @@ export class GameScene extends Phaser.Scene {
         this.obstacleManager = new ObstacleManager(this);
         this.powerUpManager = new PowerUpManager(this);
         this.scoreManager = new ScoreManager();
+        this.enemyPlaneManager = new EnemyPlaneManager(this);
+        this.distance = 0;
 
         // Create airplane
         this.airplane = new Airplane(this, AIRPLANE_START_X, AIRPLANE_START_Y);
@@ -58,20 +62,24 @@ export class GameScene extends Phaser.Scene {
         graphics.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE0F6FF, 0xE0F6FF, 1);
         graphics.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-        // Add some clouds
-        for (let i = 0; i < 5; i++) {
-            const cloud = this.add.rectangle(
-                Phaser.Math.Between(0, GAME_WIDTH),
-                Phaser.Math.Between(50, 300),
-                Phaser.Math.Between(80, 150),
-                40,
-                0xffffff,
-                0.6
-            );
+        // Add better looking fluffy clouds
+        for (let i = 0; i < 8; i++) {
+            const cloudGraphics = this.add.graphics();
+            const x = Phaser.Math.Between(0, GAME_WIDTH);
+            const y = Phaser.Math.Between(50, 400);
+            const scale = Phaser.Math.FloatBetween(0.8, 1.5);
+            
+            cloudGraphics.fillStyle(COLOR_CLOUD, 0.7);
+            // Create fluffy cloud with multiple circles
+            cloudGraphics.fillCircle(x, y, 30 * scale);
+            cloudGraphics.fillCircle(x + 25 * scale, y, 35 * scale);
+            cloudGraphics.fillCircle(x + 50 * scale, y, 30 * scale);
+            cloudGraphics.fillCircle(x + 25 * scale, y - 15 * scale, 25 * scale);
+            
             this.tweens.add({
-                targets: cloud,
-                x: -100,
-                duration: 30000 + i * 5000,
+                targets: cloudGraphics,
+                x: -200,
+                duration: 40000 + i * 3000,
                 repeat: -1
             });
         }
@@ -110,13 +118,18 @@ export class GameScene extends Phaser.Scene {
     update(time: number, delta: number): void {
         if (!this.isPlaying || this.airplane.isDead) return;
 
+        // Update distance traveled (1 pixel = 0.1 meters)
+        this.distance += (delta / 1000) * 30; // 30 meters per second
+
         // Update airplane
         this.airplane.update(delta);
 
         // Update managers
+        const difficultyLevel = this.obstacleManager.getDifficultyLevel();
         this.obstacleManager.update(delta);
         this.powerUpManager.update(delta);
         this.scoreManager.update(delta);
+        this.enemyPlaneManager.update(delta, difficultyLevel, this.airplane.getPosition().y);
 
         // Check collisions
         this.checkCollisions();
@@ -171,6 +184,20 @@ export class GameScene extends Phaser.Scene {
             }
         });
 
+        // Check airplane vs enemy planes
+        this.enemyPlaneManager.getEnemies().forEach(enemy => {
+            if (enemy.isDead) return;
+
+            const enemySprite = enemy.getSprite();
+            const enemyBounds = enemySprite.getBounds();
+
+            if (Phaser.Geom.Intersects.RectangleToRectangle(airplaneBounds, enemyBounds)) {
+                this.handleAirplaneCollision();
+                enemy.explode();
+                this.enemyPlaneManager.removeEnemy(enemy);
+            }
+        });
+
         // Check projectiles vs obstacles
         this.powerUpManager.getProjectiles().forEach(projectile => {
             if (projectile.isDead) return;
@@ -178,6 +205,7 @@ export class GameScene extends Phaser.Scene {
             const projectileSprite = projectile.getSprite() as Phaser.GameObjects.Rectangle;
             const projectileBounds = projectileSprite.getBounds();
 
+            // vs obstacles
             this.obstacleManager.getObstacles().forEach(obstacle => {
                 if (obstacle.isDead) return;
 
@@ -187,6 +215,21 @@ export class GameScene extends Phaser.Scene {
                 if (Phaser.Geom.Intersects.RectangleToRectangle(projectileBounds, obstacleBounds)) {
                     obstacle.explode();
                     this.obstacleManager.removeObstacle(obstacle);
+                    this.powerUpManager.removeProjectile(projectile);
+                    this.scoreManager.obstacleDestroyed();
+                }
+            });
+
+            // vs enemy planes
+            this.enemyPlaneManager.getEnemies().forEach(enemy => {
+                if (enemy.isDead) return;
+
+                const enemySprite = enemy.getSprite();
+                const enemyBounds = enemySprite.getBounds();
+
+                if (Phaser.Geom.Intersects.RectangleToRectangle(projectileBounds, enemyBounds)) {
+                    enemy.explode();
+                    this.enemyPlaneManager.removeEnemy(enemy);
                     this.powerUpManager.removeProjectile(projectile);
                     this.scoreManager.obstacleDestroyed();
                 }
@@ -241,6 +284,8 @@ export class GameScene extends Phaser.Scene {
         this.obstacleManager.reset();
         this.powerUpManager.reset();
         this.scoreManager.reset();
+        this.enemyPlaneManager.reset();
+        this.distance = 0;
 
         // Reset airplane
         if (this.airplane) {
@@ -258,5 +303,13 @@ export class GameScene extends Phaser.Scene {
 
     public getPowerUpManager(): PowerUpManager {
         return this.powerUpManager;
+    }
+
+    public getDistance(): number {
+        return this.distance;
+    }
+
+    public getTimeUntilNextPowerUp(): number {
+        return this.powerUpManager.getTimeUntilNextPowerUp();
     }
 }

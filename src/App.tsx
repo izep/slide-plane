@@ -19,6 +19,8 @@ function App() {
     const [finalScore, setFinalScore] = useState(0);
     const [finalHighScore, setFinalHighScore] = useState(0);
     const [finalTimeSurvived, setFinalTimeSurvived] = useState(0);
+    const [distance, setDistance] = useState(0);
+    const [timeUntilPowerUp, setTimeUntilPowerUp] = useState(0);
 
     useEffect(() => {
         const handleGameOver = (data: any) => {
@@ -30,10 +32,20 @@ function App() {
 
         EventBus.on(Events.GAME_OVER, handleGameOver);
 
+        // Poll game scene for distance and powerup time while playing
+        const pollInterval = setInterval(() => {
+            if (gameState === GameState.PLAYING && phaserRef.current?.scene) {
+                const scene = phaserRef.current.scene as GameScene;
+                setDistance(scene.getDistance());
+                setTimeUntilPowerUp(scene.getTimeUntilNextPowerUp());
+            }
+        }, 100); // Update 10 times per second
+
         return () => {
             EventBus.off(Events.GAME_OVER, handleGameOver);
+            clearInterval(pollInterval);
         };
-    }, []);
+    }, [gameState]);
 
     const handleStartGame = () => {
         setGameState(GameState.PLAYING);
@@ -69,7 +81,11 @@ function App() {
             
             <PhaserGame ref={phaserRef} currentActiveScene={() => {}} />
             
-            <GameUI isPlaying={gameState === GameState.PLAYING} />
+            <GameUI 
+                isPlaying={gameState === GameState.PLAYING} 
+                distance={distance}
+                timeUntilPowerUp={timeUntilPowerUp}
+            />
             
             {gameState === GameState.GAME_OVER && (
                 <GameOver
