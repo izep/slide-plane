@@ -76,8 +76,20 @@ Game will be available at: `https://izep.github.io/slide-plane`
 
 ### Method 2: GitHub Actions (Automated)
 
-Create `.github/workflows/deploy.yml`:
+The repository includes `.github/workflows/deploy.yml` that uses the official GitHub Pages deployment actions.
 
+**Setup:**
+1. Go to repository Settings → Pages
+2. Source: Select "GitHub Actions"
+3. Save
+
+**Configuration:**
+The workflow automatically:
+- Builds the game on every push to `main`
+- Uploads the build artifact
+- Deploys to GitHub Pages
+
+**Workflow overview:**
 ```yaml
 name: Deploy to GitHub Pages
 
@@ -85,29 +97,42 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
-        
+        node-version: '20'
+        cache: 'npm'
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
     - name: Install dependencies
-      run: npm install
-      
+      run: npm ci
     - name: Build
-      run: npm run build
-      
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+      run: npm run build-nolog
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist
+        path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
 ```
 
 Then push to GitHub, and it will automatically deploy on every push to main.
