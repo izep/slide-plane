@@ -89,6 +89,8 @@ export const GameUI: React.FC<GameUIProps> = ({ isPlaying, distance = 0, timeUnt
                     <span className="powerup-name">{getPowerUpDisplay()}</span>
                 </div>
             )}
+            
+            <div className="version-info">v1.0.3</div>
         </div>
     );
 };

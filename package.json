@@ -1,7 +1,7 @@
 {
     "name": "slide-plane",
     "description": "A fast-paced side-scrolling airplane game built with Phaser 3, React, and TypeScript.",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/izep/slide-plane.git"

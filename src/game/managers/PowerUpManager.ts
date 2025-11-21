@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { PowerUp, Projectile } from '../entities/PowerUp';
 import { PowerUpType } from '../../types/GameTypes';
+import { EventBus, Events } from '../../utils/EventBus';
 import {
     POWERUP_SPAWN_CHANCE,
     POWERUP_SPAWN_INTERVAL,
@@ -50,6 +51,8 @@ export class PowerUpManager {
             if (this.powerUpTimeRemaining <= 0) {
                 this.currentPowerUp = null;
                 this.powerUpTimeRemaining = 0;
+                // Emit event that powerup expired
+                EventBus.emit(Events.POWERUP_EXPIRED);
             }
         }
     }
@@ -78,10 +81,26 @@ export class PowerUpManager {
         return this.fireTimer >= fireRate;
     }
 
-    fireProjectile(x: number, y: number): Projectile | null {
+    fireProjectile(x: number, y: number, enemies: any[]): Projectile | null {
         if (!this.canFire() || !this.currentPowerUp) return null;
 
-        const projectile = new Projectile(this.scene, x, y, this.currentPowerUp);
+        // For rockets, find nearest enemy to track
+        let targetEnemy = null;
+        if (this.currentPowerUp === PowerUpType.ROCKET && enemies.length > 0) {
+            // Find nearest non-dead enemy
+            const aliveEnemies = enemies.filter(e => !e.isDead);
+            if (aliveEnemies.length > 0) {
+                targetEnemy = aliveEnemies.reduce((nearest, enemy) => {
+                    const enemySprite = enemy.getSprite();
+                    const dist = Phaser.Math.Distance.Between(x, y, enemySprite.x, enemySprite.y);
+                    const nearestSprite = nearest.getSprite();
+                    const nearestDist = Phaser.Math.Distance.Between(x, y, nearestSprite.x, nearestSprite.y);
+                    return dist < nearestDist ? enemy : nearest;
+                });
+            }
+        }
+
+        const projectile = new Projectile(this.scene, x, y, this.currentPowerUp, targetEnemy);
         this.projectiles.push(projectile);
         this.fireTimer = 0;
 

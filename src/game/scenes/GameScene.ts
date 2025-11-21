@@ -143,7 +143,7 @@ export class GameScene extends Phaser.Scene {
         // Auto-fire if power-up is active
         if (this.powerUpManager.canFire()) {
             const pos = this.airplane.getPosition();
-            this.powerUpManager.fireProjectile(pos.x + 30, pos.y);
+            this.powerUpManager.fireProjectile(pos.x + 30, pos.y, this.enemyPlaneManager.getEnemies());
         }
 
         // Check game over

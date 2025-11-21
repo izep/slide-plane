@@ -23,7 +23,9 @@ export class Obstacle {
         this.sprite = this.createCrate(scene, x, y, size);
         scene.physics.add.existing(this.sprite);
         
+        // Make it immovable so it pushes the plane
         const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+        body.setImmovable(true);
         
         // Vary the movement angles
         if (type === ObstacleType.MOVING_VERTICAL) {

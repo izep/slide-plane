@@ -89,15 +89,23 @@ export class Projectile {
     private scene: Phaser.Scene;
     private sprite: Phaser.GameObjects.GameObject;
     private type: PowerUpType;
+    private _targetEnemy: any;
     public isDead: boolean = false;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, type: PowerUpType) {
+    constructor(scene: Phaser.Scene, x: number, y: number, type: PowerUpType, targetEnemy?: any) {
         this.scene = scene;
         this.type = type;
+        this._targetEnemy = targetEnemy;
 
         if (type === PowerUpType.LASER) {
-            // Laser is a line
-            const line = scene.add.rectangle(x, y, LASER_LENGTH, 4, COLOR_PROJECTILE);
+            // Laser beam - make it more visible
+            const graphics = scene.add.graphics();
+            graphics.fillStyle(0x00FF00, 1);
+            graphics.fillRect(0, -2, LASER_LENGTH, 4);
+            graphics.generateTexture('laser-beam', LASER_LENGTH, 4);
+            graphics.destroy();
+            
+            const line = scene.add.sprite(x, y, 'laser-beam');
             scene.physics.add.existing(line);
             this.sprite = line;
             
@@ -105,7 +113,7 @@ export class Projectile {
             scene.tweens.add({
                 targets: line,
                 alpha: 0,
-                duration: 200,
+                duration: 300,
                 onComplete: () => {
                     this.isDead = true;
                     line.destroy();
@@ -127,8 +135,32 @@ export class Projectile {
     update(): void {
         if (this.isDead) return;
 
-        const sprite = this.sprite as Phaser.GameObjects.Rectangle;
-        if (sprite.x > this.scene.scale.width + 50) {
+        const sprite = this.sprite as Phaser.GameObjects.Rectangle | Phaser.GameObjects.Sprite;
+        
+        // Rockets track nearest enemy
+        if (this.type === PowerUpType.ROCKET && this._targetEnemy && !this._targetEnemy.isDead) {
+            const body = sprite.body as Phaser.Physics.Arcade.Body;
+            const targetSprite = this._targetEnemy.getSprite();
+            
+            // Calculate angle to target
+            const angle = Phaser.Math.Angle.Between(
+                sprite.x, sprite.y,
+                targetSprite.x, targetSprite.y
+            );
+            
+            // Update velocity to track target
+            body.setVelocity(
+                Math.cos(angle) * PROJECTILE_SPEED,
+                Math.sin(angle) * PROJECTILE_SPEED
+            );
+            
+            // Rotate sprite to face direction
+            sprite.rotation = angle;
+        }
+
+        // Check if off screen
+        if (sprite.x > this.scene.scale.width + 100 || sprite.x < -100 ||
+            sprite.y > this.scene.scale.height + 100 || sprite.y < -100) {
             this.destroy();
         }
     }
